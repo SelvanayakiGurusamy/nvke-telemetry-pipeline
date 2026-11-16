@@ -343,3 +343,27 @@ tests:
       - equal:
           path: spec.config.exporters["otlp_grpc/(exp/metrics_egress)"].sending_queue.queue_size
           value: 515396076
+
+  - it: appends additional redaction rules after the blueprint defaults
+    set:
+      gateway_metrics.otelcol.config.exporters.blueprint/metrics_egress.redaction.additional_blocked_key_patterns: ['(?i)^tenant[._-]?key$$']
+      gateway_metrics.otelcol.config.exporters.blueprint/metrics_egress.redaction.additional_blocked_values: ['\bsk-[A-Za-z0-9]{20,}\b']
+    asserts:
+      - lengthEqual:
+          path: spec.config.processors["redaction/(exp/metrics_egress)"].blocked_key_patterns
+          count: 4
+      - equal:
+          path: spec.config.processors["redaction/(exp/metrics_egress)"].blocked_key_patterns[0]
+          value: '(?i)^(?:password|passwd|db[._-]?password)$$'
+      - equal:
+          path: spec.config.processors["redaction/(exp/metrics_egress)"].blocked_key_patterns[3]
+          value: '(?i)^tenant[._-]?key$$'
+      - lengthEqual:
+          path: spec.config.processors["redaction/(exp/metrics_egress)"].blocked_values
+          count: 3
+      - equal:
+          path: spec.config.processors["redaction/(exp/metrics_egress)"].blocked_values[0]
+          value: '(?i)\bBearer\s+[A-Za-z0-9._~+/-]+=*'
+      - equal:
+          path: spec.config.processors["redaction/(exp/metrics_egress)"].blocked_values[2]
+          value: '\bsk-[A-Za-z0-9]{20,}\b'
