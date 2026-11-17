@@ -1112,7 +1112,6 @@ gateway_metrics:
               statements:
                 - 'set(attributes["k8s.cluster.name"], "${env:K8S_CLUSTER_NAME:-unknown}") where attributes["k8s.cluster.name"] == nil'
       exporters:
-        # Redacts and exports to the backend; see blueprints.exporters.metrics_egress.
         blueprint/metrics_egress:
           endpoint: lgtm:4317
           tls:
