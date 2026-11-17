@@ -1618,7 +1618,7 @@ matches the snapshot with default values:
               - (?i)"?\b(?:[A-Za-z0-9]+[._-])*(?:password|passwd|secret|token|(?:access|refresh|id|session|auth)[._-]?token|(?:access|secret|private|api)[._-]?key|secret[._-]?access[._-]?key|client[._-]?secret|authorization|(?:set[._-]?)?cookie|[A-Za-z0-9]*(?-i:[a-z0-9])(?:(?-i:P)(?:assword|asswd|rivate[._-]?key)|(?-i:S)ecret|(?-i:T)oken|(?-i:A)(?:pi[._-]?key|ccess[._-]?key|uthorization)|(?-i:C)ookie))"?\s*[:=]\s*(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|(?:(?:Bearer|Basic)\s+)?[^\s,;"]+)
             redact_all_types: true
             summary: silent
-          transform/cluster/(exp/metrics_egress):
+          transform/cluster:
             error_mode: ignore
             metric_statements:
               - context: resource
@@ -1648,6 +1648,7 @@ matches the snapshot with default values:
                 - forward/exp/metrics_egress
               processors:
                 - memory_limiter
+                - transform/cluster
               receivers:
                 - otlp
             metrics/(exp/metrics_egress):
@@ -1655,7 +1656,6 @@ matches the snapshot with default values:
                 - otlp_grpc/(exp/metrics_egress)
               processors:
                 - redaction/(exp/metrics_egress)
-                - transform/cluster/(exp/metrics_egress)
               receivers:
                 - forward/exp/metrics_egress
           telemetry:
@@ -14748,12 +14748,6 @@ matches the snapshot with default values:
               - context: resource
                 statements:
                   - set(attributes["k8s.cluster.name"], "${env:K8S_CLUSTER_NAME:-unknown}") where attributes["k8s.cluster.name"] == nil
-          transform/cluster/(exp/metrics_egress):
-            error_mode: ignore
-            metric_statements:
-              - context: resource
-                statements:
-                  - set(attributes["k8s.cluster.name"], "${env:K8S_CLUSTER_NAME:-unknown}") where attributes["k8s.cluster.name"] == nil
         receivers:
           otlp/insecure:
             protocols:
@@ -14818,6 +14812,7 @@ matches the snapshot with default values:
                 - forward/exp/metrics_egress
               processors:
                 - memory_limiter
+                - transform/cluster
               receivers:
                 - otlp/insecure
                 - otlp/secure
@@ -14827,7 +14822,6 @@ matches the snapshot with default values:
                 - otlp_grpc/(exp/metrics_egress)
               processors:
                 - redaction/(exp/metrics_egress)
-                - transform/cluster/(exp/metrics_egress)
               receivers:
                 - forward/exp/metrics_egress
             traces:

@@ -41,6 +41,12 @@ tests:
           path: spec.config.processors
           value:
             memory_limiter: {check_interval: 500ms, limit_percentage: 80, spike_limit_percentage: 25}
+            transform/cluster:
+              error_mode: ignore
+              metric_statements:
+                - context: resource
+                  statements:
+                    - 'set(attributes["k8s.cluster.name"], "${env:K8S_CLUSTER_NAME:-unknown}") where attributes["k8s.cluster.name"] == nil'
       - equal:
           path: spec.config.service.pipelines.metrics.exporters
           value: [otlp_grpc]

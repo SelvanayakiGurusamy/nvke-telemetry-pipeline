@@ -22,7 +22,7 @@ tests:
                   - 'set(attributes["k8s.cluster.name"], "${env:K8S_CLUSTER_NAME:-unknown}") where attributes["k8s.cluster.name"] == nil'
         template: templates/gateway-logs.yaml
       - equal:
-          path: spec.config.processors["transform/cluster/(exp/metrics_egress)"]
+          path: spec.config.processors["transform/cluster"]
           value:
             error_mode: ignore
             metric_statements:
@@ -44,7 +44,7 @@ tests:
           value: 'set(attributes["k8s.cluster.name"], "${env:K8S_CLUSTER_NAME:-unknown}") where attributes["k8s.cluster.name"] == nil'
         template: templates/watchdog.yaml
       - exists:
-          path: spec.config.processors["transform/cluster/(exp/metrics_egress)"].metric_statements
+          path: spec.config.processors["transform/cluster"].metric_statements
         template: templates/watchdog.yaml
       - exists:
           path: spec.config.processors["transform/cluster"].trace_statements

@@ -84,10 +84,10 @@ blueprints:
     metrics_egress:
       version: 0.1.0
       description: |
-        Redacts credentials from a metrics pipeline, sets k8s.cluster.name when
-        missing, and sends the result to an OTLP gRPC backend. Use it as the
-        exporter of every metrics pipeline that leaves the cluster; only data sent
-        through this blueprint is redacted.
+        Redacts credentials from a metrics pipeline and sends the result to an
+        OTLP gRPC backend. Use it as the exporter of every metrics pipeline that
+        leaves the cluster; only data sent through this blueprint is redacted.
+        Processors in the pipeline that uses it run before redaction.
         Redaction keeps bare `secret` and `token` label keys, such as
         kube-state-metrics Secret names, and blocks explicit credential keys and
         credential-looking values.
@@ -119,12 +119,6 @@ blueprints:
               {{- with .values.redaction }}{{ range .additional_blocked_values }}
               - {{ toJson . }}
               {{- end }}{{ end }}
-          transform/cluster:
-            error_mode: ignore
-            metric_statements:
-              - context: resource
-                statements:
-                  - 'set(attributes["k8s.cluster.name"], "${env:K8S_CLUSTER_NAME:-unknown}") where attributes["k8s.cluster.name"] == nil'
         exporters:
           otlp_grpc:
             endpoint: {{ required "metrics_egress: endpoint is required" .values.endpoint | quote }}
@@ -143,7 +137,7 @@ blueprints:
         pipelines:
           metrics:
             receivers: [{{ .forward }}]
-            processors: [redaction, transform/cluster]
+            processors: [redaction]
             exporters: [otlp_grpc]
     otlp_backend:
       version: 0.2.0
@@ -477,7 +471,7 @@ watchdog:
         pipelines:
           metrics:
             receivers: [otlp/insecure, otlp/secure, prometheus]
-            processors: [memory_limiter]
+            processors: [memory_limiter, transform/cluster]
             exporters: [blueprint/metrics_egress]
           logs:
             receivers: [otlp/secure]
@@ -1109,8 +1103,16 @@ gateway_metrics:
           check_interval: 500ms # Poll Go heap Alloc. Bursts can allocate between checks.
           limit_percentage: 80 # Hard heap threshold, 3.2Gi. Leaves room below the container cap.
           spike_limit_percentage: 25 # Subtract from hard threshold for soft refusal at 55% (2.2Gi).
+        transform/cluster:
+          # Sets k8s.cluster.name from global.clusterName, or "unknown", unless the sender set one.
+          # The variable is inside an OTTL string so that names such as 42 or true stay strings.
+          error_mode: ignore
+          metric_statements:
+            - context: resource
+              statements:
+                - 'set(attributes["k8s.cluster.name"], "${env:K8S_CLUSTER_NAME:-unknown}") where attributes["k8s.cluster.name"] == nil'
       exporters:
-        # Redacts, sets k8s.cluster.name, and exports to the backend; see blueprints.exporters.metrics_egress.
+        # Redacts and exports to the backend; see blueprints.exporters.metrics_egress.
         blueprint/metrics_egress:
           endpoint: lgtm:4317
           tls:
@@ -1161,7 +1163,7 @@ gateway_metrics:
         pipelines:
           metrics:
             receivers: [otlp]
-            processors: [memory_limiter]
+            processors: [memory_limiter, transform/cluster]
             exporters: [blueprint/metrics_egress]
   # Native sidecar for this workload's own telemetry. It buffers through outages,
   # keeps only error and slow traces, and exports over gRPC to nktp-watchdog-collector:4317.

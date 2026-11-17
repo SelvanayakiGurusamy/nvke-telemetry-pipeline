@@ -57,10 +57,10 @@ tests:
       - equal:
           path: spec.config.service.pipelines
           value:
-            metrics: {receivers: [otlp], processors: [memory_limiter], exporters: [forward/exp/metrics_egress]}
+            metrics: {receivers: [otlp], processors: [memory_limiter, transform/cluster], exporters: [forward/exp/metrics_egress]}
             "metrics/(exp/metrics_egress)":
               receivers: [forward/exp/metrics_egress]
-              processors: ["redaction/(exp/metrics_egress)", "transform/cluster/(exp/metrics_egress)"]
+              processors: ["redaction/(exp/metrics_egress)"]
               exporters: ["otlp_grpc/(exp/metrics_egress)"]
       - equal:
           path: spec.config.processors.memory_limiter
