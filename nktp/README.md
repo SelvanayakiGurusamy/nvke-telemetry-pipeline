@@ -405,6 +405,11 @@ seccomp. Configure its resources and security under
 
 ### Resource defaults
 
+Chart defaults use `xlarge` sizing. The repository provides
+`sizing-small.values.yaml` and `sizing-xlarge.values.yaml` examples under
+`docs/examples/`. Apply one with `-f` before your deployment values file.
+Use the example from the same release as the chart.
+
 | Collector | CPU request / limit | Memory request / limit | GOMEMLIMIT |
 | --- | --- | --- | --- |
 | Node | 500m / 2 | 1Gi / 2Gi | 768MiB |
