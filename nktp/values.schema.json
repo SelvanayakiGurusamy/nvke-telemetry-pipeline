@@ -2,6 +2,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
+    "targetAllocatorClusterSecretAccess": {
+      "type": "boolean",
+      "description": "Grant monitor-watching Target Allocators get, list, and watch access to all Secrets and get access to all ConfigMaps across the cluster. Defaults to false."
+    },
     "global": {
       "type": "object",
       "properties": {

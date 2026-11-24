@@ -328,9 +328,12 @@ receiver's `otelcol.config`.
 - **Prometheus metrics:** create a `ServiceMonitor` or `PodMonitor`. It can live
   in any namespace and needs no NKTP-specific label. If a NetworkPolicy guards
   the metrics port, admit the release namespace. If a monitor references a
-  Secret or CA ConfigMap, list its namespace in
-  `daemonset.kubernetes.targetAllocator.prometheusCR.secretNamespaces` so the
-  node Target Allocator can read it. Both the node and large-target allocators
+  Secret or CA ConfigMap, enable `targetAllocatorClusterSecretAccess: true`
+  to let monitor-watching Target Allocators read those references in any
+  namespace. This defaults to `false`; enabling it grants Secrets
+  `get/list/watch` and ConfigMaps `get` across the cluster, including objects
+  not referenced by monitors.
+  Both the node and large-target allocators
   default `prometheusCR.denyFSAccessThroughSMs` to `false` for compatibility
   with monitors that reference files in Collector containers. Before setting
   it to `true`, replace file references in the selected monitors with Secret
